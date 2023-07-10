@@ -6,6 +6,7 @@
  */
 
 #include <common.h>
+#include <command.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/imx-regs.h>
 #include <asm/arch/sys_proto.h>
@@ -15,6 +16,7 @@
 #include <errno.h>
 #include <linux/bitops.h>
 #include <linux/delay.h>
+#include <log.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -905,6 +907,42 @@ int imx_eqos_txclk_set_rate(ulong rate)
 u32 imx_get_eqos_csr_clk(void)
 {
 	return get_root_clk(ENET_AXI_CLK_ROOT);
+}
+#endif
+
+#if defined(CONFIG_IMX8MP)
+void init_usb_clk(void)
+{
+	clock_enable(CCGR_USB_MSCALE_PL301, 0);
+	clock_enable(CCGR_USB_PHY_8MP, 0);
+
+	/* HSIOMIX AXI BUS root already been set by ROM */
+
+	/* 100MHz */
+	clock_set_target_val(USB_CORE_REF_CLK_ROOT, CLK_ROOT_ON |
+			     CLK_ROOT_SOURCE_SEL(1));
+	/* 100MHz */
+	clock_set_target_val(USB_PHY_REF_CLK_ROOT, CLK_ROOT_ON |
+			     CLK_ROOT_SOURCE_SEL(1));
+
+	clock_enable(CCGR_USB_MSCALE_PL301, 1);
+	clock_enable(CCGR_USB_PHY_8MP, 1);
+}
+#else
+void enable_usboh3_clk(unsigned char enable)
+{
+	if (enable) {
+		clock_enable(CCGR_USB_MSCALE_PL301, 0);
+		/* 500M */
+		clock_set_target_val(USB_BUS_CLK_ROOT, CLK_ROOT_ON | CLK_ROOT_SOURCE_SEL(1));
+		/* 100M */
+		clock_set_target_val(USB_CORE_REF_CLK_ROOT, CLK_ROOT_ON | CLK_ROOT_SOURCE_SEL(1));
+		/* 100M */
+		clock_set_target_val(USB_PHY_REF_CLK_ROOT, CLK_ROOT_ON | CLK_ROOT_SOURCE_SEL(1));
+		clock_enable(CCGR_USB_MSCALE_PL301, 1);
+	} else {
+		clock_enable(CCGR_USB_MSCALE_PL301, 0);
+	}
 }
 #endif
 
