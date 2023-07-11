@@ -30,6 +30,8 @@
 #include <imx_sip.h>
 #include <linux/arm-smccc.h>
 #include <linux/bitops.h>
+#include <asm/setup.h>
+#include <asm/bootm.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -1173,6 +1175,40 @@ usb_modify_speed:
 
 	return 0;
 }
+#endif
+
+#ifdef CONFIG_OF_BOARD_FIXUP
+#ifndef CONFIG_SPL_BUILD
+int board_fix_fdt(void *fdt)
+{
+	if (is_imx8mpul()) {
+		int i = 0;
+		int nodeoff, ret;
+		const char *status = "disabled";
+		static const char * dsi_nodes[] = {
+			"/soc@0/bus@32c00000/mipi_dsi@32e60000",
+			"/soc@0/bus@32c00000/lcd-controller@32e80000",
+			"/dsi-host"
+		};
+
+		for (i = 0; i < ARRAY_SIZE(dsi_nodes); i++) {
+			nodeoff = fdt_path_offset(fdt, dsi_nodes[i]);
+			if (nodeoff > 0) {
+set_status:
+				ret = fdt_setprop(fdt, nodeoff, "status", status,
+					strlen(status) + 1);
+				if (ret == -FDT_ERR_NOSPACE) {
+					ret = fdt_increase_size(fdt, 512);
+					if (!ret)
+						goto set_status;
+				}
+			}
+		}
+	}
+
+	return 0;
+}
+#endif
 #endif
 
 #if !CONFIG_IS_ENABLED(SYSRESET)

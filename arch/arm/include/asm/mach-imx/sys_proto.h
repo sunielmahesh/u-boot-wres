@@ -77,6 +77,7 @@ struct bd_info;
 #define is_imx8mpd() (is_cpu_type(MXC_CPU_IMX8MPD))
 #define is_imx8mpl() (is_cpu_type(MXC_CPU_IMX8MPL))
 #define is_imx8mp6() (is_cpu_type(MXC_CPU_IMX8MP6))
+#define is_imx8mpul() (is_cpu_type(MXC_CPU_IMX8MPUL))
 
 #define is_imx8qxp() (is_cpu_type(MXC_CPU_IMX8QXP))
 
